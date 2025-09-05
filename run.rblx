@@ -1,0 +1,381 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local showQuestion = ReplicatedStorage:WaitForChild("ShowQuestion")
+local SubmitAnswer = ReplicatedStorage:WaitForChild("SubmitAnswer")
+local playDeadEvent = ReplicatedStorage:WaitForChild("PlayDeadEvent")
+local countdownEvent = ReplicatedStorage:WaitForChild("CountdownEvent")
+local activateCardEvent = ReplicatedStorage:WaitForChild("ActivateCard")
+local showCard = ReplicatedStorage:WaitForChild("ShowCard")
+
+
+local SoundService = game:GetService("SoundService")
+local countSound = ReplicatedStorage:WaitForChild("Countdown")
+
+
+--Local Files
+local run = {}
+local playerInput = {} -- tracks if player used their card in time
+local gun = require("./gun")
+local transition = require("./transition")
+local quesList = require("./quesList")
+local cards = require("./cards")
+
+-- Workspace Files
+local pointer = workspace.Revolver
+local rotateModule = pointer:WaitForChild("Rotate")
+local rotate = require(rotateModule)
+
+-- Players Variables
+local playerList = game:GetService("Players"):GetPlayers()
+local players = {}
+local numPlayers = 0
+
+-- Q&A Variables
+local quesAns = quesList.getList()
+local numofQues = #quesAns
+local ques = nil
+local corAns = nil
+local A = nil
+local B = nil
+local C = nil
+local D = nil
+
+-- Gun Variables
+local numBullets = 1
+local currChamber = 1
+local arrChamber = {false, false, false, false, false, false} 
+arrChamber = gun.setup(numBullets, arrChamber)
+
+-- Game setup Variables
+local level = 1
+local turn = 0
+local checkLevel = level
+
+-- Running function
+function run.running(targetPlayer)
+	print("Starting ........................")
+	print(".................................")
+
+	-- Get updated players and numPlayers
+	players, numPlayers = transition.addPlayers(players)
+	print("Players after transition: ", players)
+	print("Total number of players: ", numPlayers)
+	print("Add cards")
+	cards.setupCards(players, numPlayers)
+	print("Game starts now, may Lady Luck smile upon you!")
+
+	while true do
+		print("Running Level: " .. level .. ", Turn: " .. turn)
+		run.setupCurrLevel()
+
+		run.inputAnswer()
+		
+		run.checkAns()
+		
+		run.shootRandPlayer()
+		
+		checkLevel = level
+		
+		cards.resetCards(players, numPlayers)
+		
+		if numPlayers <= 1 then
+			print(players[1][1].Name .. " is the Winner!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			break
+		end
+		
+		-- COOLDOWN between rounds
+		wait(1)
+		for i = 5, 0, -1 do
+			print("Cooldown before next round... " .. i)
+			-- Clone and play the sound from SoundService so all players hear it
+			if i > 0 then -- stop sound from playing at 1
+				local soundClone = countSound:Clone()
+				soundClone.Parent = SoundService
+				soundClone:Play()
+
+				game:GetService("Debris"):AddItem(soundClone, soundClone.TimeLength + 1)
+			end
+
+			countdownEvent:FireAllClients(i)
+			wait(1)
+		end
+	end
+end
+
+local cardButton = 0
+
+-- When player clicks the card button
+activateCardEvent.OnServerEvent:Connect(function(player, inputValue)
+	if inputValue == 1 then
+		playerInput[player] = 1 -- mark that this player activated a card
+		print("BUTTON PRESSED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+		cardButton = playerInput[player]
+		print(cardButton)
+	end
+end)
+
+-- Checking answer function
+function run.checkAns(targetPlayer)
+	for curr = 1, numPlayers do
+		print("Checking player: " .. players[curr][1].Name)
+
+		if players[curr][3][1] ~= "None" then
+			showCard:FireClient(players[curr][1], true)
+			print("Waiting for button signal")
+			task.wait(5)
+			if cardButton == 1 then
+				players[curr], currChamber, arrChamber, numBullets = 
+					cards.activateCards(players[curr], 
+										currChamber, 
+										arrChamber, 
+										numBullets)
+				cardButton = 0
+			end
+			showCard:FireClient(players[curr][1], false)
+		end
+		
+
+		if players[curr][3][1] == "Pass" and players[curr][3][2] == true then
+			print(players[curr][1].Name .." passing the current turn")
+			players[curr][3][1] = "None"
+		else
+		
+			local fire = false
+			if players[curr][2] == false then
+				print(players[curr][1].Name .. " answer is wrong, Fire Gun!!!")
+				print("")
+				
+				local finalCFrame = rotate.PointAtPlayer(players[curr][1].Character.HumanoidRootPart.Position)
+				
+				if players[curr][3][1] == "Reflect" and players[curr][3][2] == true then				
+					local rand = math.random(1, #players)
+					--while rand == curr do
+					--	rand = math.random(1, #players)
+					--end
+					
+					local finalCFrame = rotate.PointAtPlayer(players[rand][1].Character.HumanoidRootPart.Position)
+					local checkFire, currChamber = gun.firing(currChamber, arrChamber)
+					fire = run.resultAnalyse(checkFire, rand)
+					players[curr][3][1] = "None"
+				else				
+					local checkFire, currChamber = gun.firing(currChamber, arrChamber)
+					fire = run.resultAnalyse(checkFire, curr)
+				end
+				
+				
+				rotate.gunSound(fire, finalCFrame)
+				
+				if fire == true then
+					break
+				end
+			else
+				print(players[curr][1].Name .. " answer is correct")
+			end
+			
+		end
+	end
+end
+
+
+-- Setup Current Level and Turn function
+function run.setupCurrLevel()
+	local rand = math.random(1, numofQues)
+	local text = quesAns[rand]
+
+	table.remove(quesAns, rand)
+	numofQues = #quesAns
+
+	local textCrop = {}
+
+	for part in string.gmatch(text, "([^;]+)") do
+		table.insert(textCrop, part:match("^%s*(.-)%s*$"))
+	end
+
+	ques = textCrop[1]
+	corAns = textCrop[2]
+	A = textCrop[3]
+	B = textCrop[4]
+	C = textCrop[5]
+	D = textCrop[6]
+	
+	turn = turn + 1
+	
+	print("------------------------------------------------------------------")
+	print("------------------------------------------------------------------")
+	print("Level: " .. level .. ", turn: " .. turn)
+	print("Number of Players: " .. numPlayers)
+	print("- " .. ques)
+	print("A) " .. A)
+	print("B) " .. B)
+	print("C) " .. C)
+	print("D) " .. D)
+	print()
+	for curr = 1, numPlayers do
+		players[curr][2] = true
+	end
+end
+
+
+-- Analyse result function
+function run.resultAnalyse(fire, currPlayer)
+	if fire == true then
+		-- Grab player before they're removed
+		local targetPlayer = players[currPlayer][1]
+		playDeadEvent:FireClient(targetPlayer)
+		
+		-- ensure gunfire first before killing player
+		task.delay(0.5, function()
+			run.killPlayer(targetPlayer)
+		end)
+		numPlayers, players = transition.switchToNextLevel(numPlayers, currPlayer, players)
+		numBullets = numBullets + 1
+		level = level + 1
+		turn = 0
+		arrChamber = gun.setup(numBullets, arrChamber)
+		return true
+	end
+	return false
+end
+
+
+-- Taking input answer function
+function run.inputAnswer()
+	print("Waiting for players' answers...")
+	local answeredPlayers = {}
+	local playerAnswers = {}
+	local answeredLookup = {}
+
+	-- One-time connection
+	local connection
+	connection = SubmitAnswer.OnServerEvent:Connect(function(player, answer)
+		if not answeredPlayers[player] then
+			playerAnswers[player.Name] = answer
+			answeredLookup[player.Name] = true
+			table.insert(answeredPlayers, {player.Name, true})
+			print("Player " .. player.Name .. " answered: " .. playerAnswers[player.Name])
+
+			-- calling the HideQuestionEarly 
+			if #answeredPlayers == numPlayers then
+				for _, p in pairs(game.Players:GetPlayers()) do
+					showQuestion:FireClient(p, {Hide = true})
+				end
+			end
+		end	
+	end)
+
+	-- Send question to all players
+	for _, p in pairs(game.Players:GetPlayers()) do
+		local character = p.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 5 then
+			showQuestion:FireClient(p, {
+				Question = ques,
+				A1 = A,
+				B1 = B,
+				C1 = C,
+				D1 = D
+			})
+		else
+			-- Player is dead, hide question
+			showQuestion:FireClient(p, {Hide = true})
+		end
+	end
+
+	local startTime = tick()
+	while tick() - startTime < 15 do -- put the desire time here
+		if #answeredPlayers == numPlayers then
+			for _, p in pairs(game.Players:GetPlayers()) do
+				showQuestion:FireClient(p, {Hide = true})
+			end
+			break
+		end
+		wait(0.1)
+	end
+
+	-- Disconnect event after responses
+	connection:Disconnect()
+	print("Time's up or all players have answered.")
+
+	-- Evaluate answers
+	for i, data in ipairs(players) do
+		local name = data[1].Name
+		local ans = playerAnswers[name]
+		if ans ~= corAns then
+			players[i][2] = false
+		end
+	end
+end
+
+
+-- Activate kill animation function
+function run.killPlayer(targetPlayer)
+	if targetPlayer and targetPlayer:IsA("Player") then
+		local character = targetPlayer.Character
+		if character then
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				-- Prevent auto respawn
+				game:GetService("Players").CharacterAutoLoads = false
+
+				-- Disable default regen
+				local regenScript = humanoid:FindFirstChild("Health") or character:FindFirstChild("Health")
+				if regenScript then
+					regenScript:Destroy()
+				end
+
+				-- Unseat manually
+				humanoid.Sit = false
+
+				-- Wait for animation to play, then clean up
+				task.delay(3, function()
+					if targetPlayer.Character then
+						targetPlayer.Character:Destroy()
+					end
+				end)
+
+				-- Set health to 0 manually
+				humanoid.Health = 0
+			end
+		end 
+	end
+end
+
+
+function run.shootRandPlayer()
+	if ((turn % 4) == 0) and numPlayers > 1 and checkLevel == level then
+		print("Shoot random player!!!")
+		local temp1, temp2 = gun.firing(currChamber, arrChamber)
+		currChamber = temp2
+		local rand = math.random(1, numPlayers)
+		local finalCFrame = rotate.PointAtPlayer(players[rand][1].Character.HumanoidRootPart.Position)
+
+		local fired = run.resultAnalyse(temp1, rand)
+
+		rotate.gunSound(fired, finalCFrame)
+	end
+end 
+	
+
+
+function run.addNewCard()
+	print("Do you want to add a new card?")
+	print("A) No")
+	print("B) Yes, one random card for 1 robuck")
+	print("C) Yes, one Pass card for 3 robucks")
+	print("D) Yes, one Respind card for 3 robucks")
+	print("E) Yes, one Add bulllet card for 3 robucks")
+	local ans = "player input"
+	if  ans == "B" then
+		cards.addRandomCard(players[1])
+	elseif ans == "C" then
+		cards.addSpecificCard(players[1], 1)
+	elseif ans == "D" then
+		cards.addSpecificCard(players[1], 2)
+	elseif ans == "E" then
+		cards.addSpecificCard(players[1], 3)
+	end
+	
+end
+
+run.running()
+
+return run
