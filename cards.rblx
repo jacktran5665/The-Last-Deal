@@ -1,0 +1,78 @@
+local cards = {}
+
+local gun = require("./gun")
+
+
+local cardType = {"Pass",
+				  "Reflect",
+				  "Respin", 
+				  "Add One Bullet",
+				  "Add Two Bullets"}
+
+
+-- Setup players Cards 
+function cards.setupCards(players, numPlayers)
+	for i = 1, numPlayers do
+		--{type, activate}
+		--math.random(1, #cardType)
+		table.insert(players[i], {cardType[math.random(1, #cardType)], false})
+		print(players[i][1].Name .. " card:" .. players[i][3][1])
+
+	end
+end
+-- {"Pass", False}
+
+-- Reset players cards
+function cards.resetCards(players, numPlayers)
+	for i = 1, numPlayers do
+		players[i][3][2] = false
+	end
+end
+
+
+-- Activate cards function
+function cards.activateCards(player, currChamber, arrChamber, numBullets)
+	print("Card activate!!!!!!!!!!!!!!!!!!")
+	player[3][2] = true
+	if player[3][1] == "Pass" then
+		print(player[1].Name .. " activated Pass")
+	elseif player[3][1] == "Reflect" then
+		print(player[1].Name .. " activate Reflect")
+	elseif player[3][1] == "Respin" then
+		print(player[1].Name .. " activated Respin")
+		print("Current Chamber: " .. currChamber)
+		currChamber = math.random(1,6)
+		print("New Chamber: " .. currChamber)
+		player[3][1] = "None"
+	elseif player[3][1] == "Add One Bullet" then
+		print(player[1].Name .. " activate Add One Bullet")
+		print("Current Bullets: " .. numBullets)
+		print(arrChamber)
+		numBullets = numBullets + 1
+		arrChamber = gun.addBullets(1, arrChamber)
+		print("New Bullets: " .. numBullets)
+		print(arrChamber)
+		player[3][1] = "None"
+	elseif player[3][1] == "Add Two Bullets" then
+		print(player[1].Name .. " activate Add Two Bullets")
+		print("Current Bullets: " .. numBullets)
+		print(arrChamber)
+		numBullets = numBullets + 2
+		arrChamber = gun.addBullets(2, arrChamber)
+		print("New Bullets: " .. numBullets)
+		print(arrChamber)
+		player[3][1] = "None"
+	end
+	return player, currChamber, arrChamber, numBullets
+end
+
+function cards.addRandomCard(player)
+	player[3] = {cardType[math.random(1, #cardType)], false}
+end
+
+function cards.addSpecificCard(player, card)
+	player[3] = {cardType[card], false}
+end
+
+
+return cards
