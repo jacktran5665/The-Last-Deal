@@ -1,0 +1,54 @@
+local spawnPoints = game.Workspace.Spawns:GetChildren()
+local assignedSpawns = {}  
+local playerSpawns = {}  
+local ContextActionService = game:GetService("ContextActionService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+
+local function moveToSpawn(player, character)
+	local spawn = playerSpawns[player]
+	if character and character:FindFirstChild("HumanoidRootPart") and spawn then
+		character:MoveTo(spawn.Position + Vector3.new(0, 3, 0))
+	end
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+
+	-- Assign spawn once
+	local assigned = false
+	for _, s in ipairs(spawnPoints) do
+		if not assignedSpawns[s] then
+			assignedSpawns[s] = player
+			playerSpawns[player] = s
+			assigned = true
+			break
+		end
+	end
+
+	player.CharacterAdded:Connect(function(character)
+		-- Wait for HumanoidRootPart to exist
+		character:WaitForChild("HumanoidRootPart")
+		moveToSpawn(player, character)
+	end)
+
+	player.AncestryChanged:Connect(function()
+		if not player:IsDescendantOf(game) then
+			local spawn = playerSpawns[player]
+			if spawn then
+				assignedSpawns[spawn] = nil
+				playerSpawns[player] = nil
+			end
+		end
+	end)
+	
+	-- checking deadAnimation
+	local playDeadValue = Instance.new("BoolValue")
+	playDeadValue.Name = "PlayDeadAnimation"
+	playDeadValue.Parent = player
+end)
+
+
+
+
+
