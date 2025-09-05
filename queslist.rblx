@@ -1,0 +1,82 @@
+local quesList = {}
+
+
+local quesAns = {
+	"What is the capital of USA?; B; Atlanta; Washington DC; New York; Chicago",
+	"Which planet is known as the 'Red Planet'?; B; Venus; Mars; Jupiter; Saturn",
+	"Who wrote the play Romeo and Juliet?; D; Charles Dickens; Mark Twain; Jane Austen; William Shakespeare",
+	"What is the chemical symbol for gold?; C; Ag; Fe; Au; Pb",
+	"Which continent is known as the birthplace of civilization?; A; Africa; Asia; Europe; South America",
+	"Which ocean is the largest in the world?; C; Atlantic Ocean; Indian Ocean; Pacific Ocean; Arctic Ocean",
+	"What gas do plants absorb from the atmosphere?; B; Oxygen; Carbon Dioxide; Nitrogen; Hydrogen",
+	"Which country is home to the Great Barrier Reef?; C; Brazil; South Africa; Australia; Mexico",
+	"What equal 1 x 5?; C; 10; 25; 5; 1",
+	"Which animal is known as the King of the Jungle?; D; Tiger; Elephant; Bear; Lion",
+	"What is the capital city of Japan?; B; Beijing; Tokyo; Seoul; Bangkok",
+	"Which metal is liquid at room temperature?; C; Aluminum; Iron; Mercury; Copper",
+	"In which year did the Titanic sink?; A; 1912; 1905; 1898; 1923",
+	"Which language has the most native speakers in the world?; D; English; Hindi; Arabic; Mandarin Chinese",
+	"What is the largest mammal on Earth?; B; Elephant; Blue Whale; Giraffe; Rhinoceros",
+	"Which continent has the most countries?; C; Europe; South America; Africa; Asia",
+	"What is the hardest natural substance on Earth?; A; Diamond; Gold; Quartz; Iron",
+	"Which famous scientist developed the theory of relativity?; C; Isaac Newton; Galileo Galilei; Albert Einstein; Nikola Tesla",
+	"What is the largest desert in the world?; A; Antarctica; Sahara; Arabian; Gobi",
+	"Which bird is known for its impressive colorful tail?; D; Sparrow; Penguin; Eagle; Peacock",
+	"How many legs does a spider have?; B; 6; 8; 10; 12",
+	"Which country hosted the 2016 Summer Olympics?; C; China; United Kingdom; Brazil; Japan",
+	"What is the main ingredient in guacamole?; A; Avocado; Tomato; Onion; Lettuce",
+	"Which part of the plant conducts photosynthesis?; C; Root; Stem; Leaf; Flower",
+	"What is the square root of 64?; A; 8; 6; 7; 9",
+	"Which country is shaped like a boot?; D; Spain; Greece; France; Italy",
+	"How many continents are there on Earth?; B; 5; 7; 6; 8",
+	"Which blood type is known as the universal donor?; C; A; B; O negative; AB",
+	"What is the longest river in the world?; A; Nile; Amazon; Yangtze; Mississippi",
+	"Who invented the telephone?; D; Thomas Edison; Nikola Tesla; Guglielmo Marconi; Alexander Graham Bell",
+	"Which planet has the most moons?; C; Earth; Mars; Saturn; Neptune",
+	"What is the main language spoken in Brazil?; B; Spanish; Portuguese; French; Italian",
+	"What is the smallest unit of life?; B; Organ; Cell; Molecule; Tissue",
+	"Which animal is known for changing its color to blend into surroundings?; D; Frog; Snake; Parrot; Chameleon",
+	"Which is the only mammal capable of true flight?; C; Squirrel; Ostrich; Bat; Eagle",
+	"Which organ helps filter blood in the human body?; C; Heart; Lungs; Kidneys; Intestines",
+	"Which sea creature has three hearts?; B; Jellyfish; Octopus; Starfish; Crab",
+	"What vitamin is primarily produced when human skin is exposed to sunlight?; B; Vitamin A; Vitamin D; Vitamin C; Vitamin B12",  
+	"Which planet rotates on its side relative to its orbit?; D; Jupiter; Earth; Mars; Uranus",  
+	"Which scientist is known for the laws of motion and gravity?; A; Isaac Newton; Albert Einstein; Johannes Kepler; Stephen Hawking",  
+	"What is the smallest unit of matter that retains the properties of an element?; C; Molecule; Electron; Atom; Proton",  
+	"Which layer of Earth's atmosphere contains the ozone layer?; D; Troposphere; Thermosphere; Exosphere; Stratosphere",  
+	"Which blood vessels carry blood away from the heart?; A; Arteries; Veins; Capillaries; Valves",  
+	"What is the term for an organism that makes its own food?; B; Consumer; Producer; Decomposer; Predator",  
+	"Which of the following is a noble gas?; D; Oxygen; Nitrogen; Hydrogen; Neon",  
+	"What is the term for a solution with a pH lower than 7?; A; Acidic; Neutral; Alkaline; Isotonic",  
+	"Which organ produces insulin in the human body?; C; Liver; Gallbladder; Pancreas; Stomach",
+	"What is the longest nerve in the human body?; C; Spinal nerve; Median nerve; Sciatic nerve; Cranial nerve",  
+	"Which subatomic particle has a negative charge?; B; Proton; Electron; Neutron; Photon",  
+	"Which organ is primarily responsible for detoxifying chemicals in the body?; D; Kidney; Stomach; Pancreas; Liver",  
+	"What is the chemical formula for table salt?; A; NaCl; H2O; CO2; KCl",  
+	"Which planet has a day longer than its year?; C; Mercury; Jupiter; Venus; Neptune",  
+	"Which part of a cell contains the genetic material?; B; Cytoplasm; Nucleus; Mitochondria; Ribosome",  
+	"What is the term for the change of a solid directly into a gas?; D; Melting; Freezing; Condensation; Sublimation",  
+	"Which muscle is found only in the heart?; A; Cardiac muscle; Skeletal muscle; Smooth muscle; Voluntary muscle",  
+	"What gas do plants absorb from the atmosphere for photosynthesis?; C; Oxygen; Nitrogen; Carbon Dioxide; Methane",  
+	"What branch of science studies heredity and genes?; B; Zoology; Genetics; Cytology; Ecology",
+	"What part of the brain is responsible for regulating breathing and heart rate?; D; Cerebrum; Cerebellum; Hypothalamus; Medulla Oblongata",  
+	"Which of these elements is a liquid at room temperature?; B; Oxygen; Mercury; Bromine; Helium",  
+	"What type of bond involves the sharing of electron pairs between atoms?; A; Covalent bond; Ionic bond; Hydrogen bond; Metallic bond",  
+	"Which process in the water cycle is driven directly by the Sun's energy?; C; Condensation; Precipitation; Evaporation; Infiltration",  
+	"What is the most abundant mineral in the human body?; D; Iron; Potassium; Sodium; Calcium",  
+	"Which planet in our solar system has the highest surface temperature?; B; Mercury; Venus; Mars; Saturn",  
+	"What part of the cell is responsible for packaging and shipping proteins?; C; Nucleus; Endoplasmic reticulum; Golgi apparatus; Lysosome",  
+	"What is the speed of light in a vacuum?; A; 299,792,458 m/s; 150,000,000 m/s; 9.8 m/s²; 1,080,000 km/h",  
+	"Which macromolecule is primarily responsible for storing genetic information?; B; Lipids; Nucleic acids; Proteins; Carbohydrates",  
+	"Which gas is responsible for the greenhouse effect on Earth?; C; Oxygen; Nitrogen; Carbon dioxide; Argon"
+}
+
+function quesList.getList()
+	return quesAns
+end
+
+function quesList.getNumofQues()
+	return (#quesAns)
+end
+
+return quesList
