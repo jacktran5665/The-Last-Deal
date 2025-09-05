@@ -1,0 +1,39 @@
+local transition = {}
+
+
+--Add player to player list function
+function transition.addPlayers(players)
+	local numofPlayers = 0
+	local playerList = game:GetService("Players"):GetPlayers()
+	while #playerList == 0 do
+		for i = 10, 1, -1 do
+			print("Game starting in... " .. i)
+			wait(1)
+		end
+		playerList = game:GetService("Players"):GetPlayers()
+	end
+
+	for i, player in ipairs(playerList) do
+		print("Player " ..i.. ":")
+		table.insert(players, {
+			player, 
+			true,
+			-- {activate, type}
+		})
+		print(player.Name)
+	end
+	
+	numofPlayers = #players
+	return players, numofPlayers
+end
+
+
+--Switch to next player function
+function transition.switchToNextLevel(numPlayers, currPlayer, players)
+	print(players[currPlayer][1].Name .. " is dead")
+	table.remove(players, currPlayer)
+	numPlayers = numPlayers - 1
+	return numPlayers, players
+end
+
+return transition
